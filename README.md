@@ -16,4 +16,4 @@
 2. Identify drug targets
 3. Create the network
 4. CyTOF data
-5. Run (CellNOpt)[https://saezlab.github.io/CellNOptR/]
+5. Run [CellNOpt](https://saezlab.github.io/CellNOptR/)
