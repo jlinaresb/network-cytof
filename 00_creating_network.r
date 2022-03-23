@@ -13,52 +13,54 @@ require(XML)
 # Initialise OmniPath database
 # ===
 # Download protein-protein interactions
-interactions = import_omnipath_interactions() %>% as_tibble()
+interactions = import_omnipath_interactions(resources=c('SignaLink3', 'PhosphoSite', 'SIGNOR')) %>% as_tibble()
 
 # Convert to igraph objects:
-OPI_g = interaction_graph(interactions = interactions )
-
+OPI_g = interaction_graph(interactions = interactions)
 
 # Proteins of Interest
 # ===
-POI = tibble(protein = c('STAT1', 'STAT3', 'STAT4', 'RPS6', 'MAPK3',
- 'MAPK1', 'MAPKAPK2', 'AKT1', 'RELA', 'CREB1', 'PTPN11'))
+poi = c('STAT1', 'STAT3', 'STAT4', 'RPS6', 'MAPK3',
+ 'MAPK1', 'MAPKAPK2', 'AKT1', 'RELA', 'CREB1', 'PTPN11')
 estimulations = c('TLR9', 'TLR7')
-
-# Drug targets
-# ===
-## parse data from XML and save it to memory
-# read_drugbank_xml_db("~/projects/networks/data/drugbank_all_full_database.xml/full database.xml")
-# dbparser::drugs(save_csv = T, csv_path = '~/projects/networks/data/drugbank_all_full_database.xml/')
-# drugs = dbparser::run_all_parsers()
 
 
 # Quality control
 # ===
-POI = POI %>% mutate(in_OP = protein %in% interactions$target_genesymbol)
+poi = poi[which(poi %in% interactions$target_genesymbol == TRUE)]
+estimulations = estimulations[which(estimulations %in% interactions$source_genesymbol == TRUE)]
 
-# Build network
+
+# Extract paths
 # ===
 collected_path_nodes = list()
 for (i in seq_along(estimulations)) {
   paths = shortest_paths(OPI_g, 
                          from = estimulations[i],
-                         to = POI$protein,
+                         to = poi,
                          output = 'vpath')
   path_nodes = lapply(paths$vpath, names) %>% unlist() %>% unique()
   collected_path_nodes[[i]] = path_nodes
 }
 collected_path_nodes = unlist(collected_path_nodes) %>% unique()  
-nodes = c(POI$protein, estimulations, collected_path_nodes) %>% unique()
+nodes = c(poi, estimulations, collected_path_nodes) %>% unique()
 
+# Build network
+# ===
 network = induced_subgraph(graph = OPI_g, vids = nodes)
 
 # Annotate network
 # ===
+# Vertix
 V(network)$node_type = ifelse(
-  V(network)$name %in% POI$protein, "POI",
+  V(network)$name %in% estimulations, "estimulated",
   ifelse(
-    V(network)$name %in% estimulations, "direct estimulation", "intermediate node"))
+    V(network)$name %in% poi, "measured", "intermediated"))
+
+# Edges
+E(network)$direction = ifelse(
+  E(network)$is_inhibition == 1, 'inhibition', 'activation')
+
 
 # Plotting
 # ===
@@ -88,3 +90,25 @@ ggraph(
   ylab("") +
   ggtitle("Induced network")
 
+
+# Export to cytoscape
+# ===
+require(RCy3)
+createNetworkFromIgraph(
+  network,
+  title = "From igraph")
+
+
+# Convert to data.frame
+# ===
+df = as.data.frame(get.edgelist(network))
+df$direction = ifelse(get.edge.attribute(network)$direction == 'activation', 1, -1)
+names(df) = c('source', 'target', 'direction')
+df = df[, c(1, 3, 2)]
+
+write.table(df,
+            quote = F,
+            col.names = F,
+            row.names = F,
+            sep = '\t',
+            file = '~/projects/networks-cytof/networks/network_v3.sif')

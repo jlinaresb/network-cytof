@@ -45,4 +45,4 @@ igraphToSif <- function(inGraph, outfile="output.sif", edgeLabel="label") {
 # Test snippet
 #
 
-igraphToSif(graph, "~/tmp/myGraph.sif", "myLabel")
+# igraphToSif(graph, "~/tmp/myGraph.sif", "myLabel")

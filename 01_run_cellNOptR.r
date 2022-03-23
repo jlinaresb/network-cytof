@@ -7,7 +7,8 @@ library(igraph)
 
 # Load data
 # ===
-# pknmodel.x = readSIF()
+pknmodel.x = readSIF('~/projects/networks-cytof/networks/network_v3.sif')
+plotModel(pknmodel.x)
 # cnolist.x = CNOlist()
 
 data("ToyModel", package="CellNOptR")
