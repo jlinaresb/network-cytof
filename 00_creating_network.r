@@ -9,27 +9,35 @@ require(ggraph)
 require(dbparser)
 require(XML)
 
-
-# Initialise OmniPath database
+# Proteins of Interest
 # ===
+poi = c('STAT1', 'STAT3', 'STAT4', 'RPS6', 'MAPK3',
+        'MAPK1', 'MAPKAPK2', 'AKT1', 'RELA', 'CREB1', 'PTPN11')
+estimulations = c('TLR9', 'TLR7')
+
 # Download protein-protein interactions
-interactions = import_omnipath_interactions(resources=c('SignaLink3', 'PhosphoSite', 'SIGNOR')) %>% as_tibble()
+# c('SignaLink3', 'PhosphoSite', 'SIGNOR')
+OmnipathR::get_interaction_resources()
+interactions = import_omnipath_interactions() %>% as_tibble()
+
+setdiff(poi, interactions$target_genesymbol)
+setdiff(estimulations, interactions$source_genesymbol)
 
 # Convert to igraph objects:
 OPI_g = interaction_graph(interactions = interactions)
 
-# Proteins of Interest
-# ===
-poi = c('STAT1', 'STAT3', 'STAT4', 'RPS6', 'MAPK3',
- 'MAPK1', 'MAPKAPK2', 'AKT1', 'RELA', 'CREB1', 'PTPN11')
-estimulations = c('TLR9', 'TLR7')
-
+# # Get annotations
+# # ===
+# annot = import_omnipath_annotations(proteins = 'STAT1',
+#                                     resources = 'MSigDB') %>%
+#   as_tibble()
+# setdiff(poi, annot$genesymbol)
+# annot = annot[grep('REACTOME', annot$value),]
 
 # Quality control
 # ===
 poi = poi[which(poi %in% interactions$target_genesymbol == TRUE)]
 estimulations = estimulations[which(estimulations %in% interactions$source_genesymbol == TRUE)]
-
 
 # Extract paths
 # ===
@@ -44,6 +52,14 @@ for (i in seq_along(estimulations)) {
 }
 collected_path_nodes = unlist(collected_path_nodes) %>% unique()  
 nodes = c(poi, estimulations, collected_path_nodes) %>% unique()
+
+
+# Import annotation of genes include in the pathway
+# ===
+# annot = import_omnipath_annotations(proteins = nodes,
+#                                     resources = 'SIGNOR') %>% 
+#   as_tibble()
+
 
 # Build network
 # ===
@@ -93,10 +109,10 @@ ggraph(
 
 # Export to cytoscape
 # ===
-require(RCy3)
-createNetworkFromIgraph(
-  network,
-  title = "From igraph")
+# require(RCy3)
+# createNetworkFromIgraph(
+#   network,
+#   title = "all")
 
 
 # Convert to data.frame
@@ -106,9 +122,27 @@ df$direction = ifelse(get.edge.attribute(network)$direction == 'activation', 1, 
 names(df) = c('source', 'target', 'direction')
 df = df[, c(1, 3, 2)]
 
+# Filter
+# ===
+curation = get.edge.attribute(network)$curation_effort
+df$curation = curation
+df = df[which(df$curation > 2 ),]
+
+df = subset(df, select = -c(curation))
 write.table(df,
             quote = F,
             col.names = F,
             row.names = F,
             sep = '\t',
-            file = '~/projects/networks-cytof/networks/network_v3.sif')
+            file = '~/projects/networks-cytof/networks/network_v4.sif')
+
+
+# Read network with cellNOptR
+# ===
+require(CellNOptR)
+model = readSIF('~/projects/networks-cytof/networks/network_v4.sif')
+plotModel(model)
+
+
+# Complex model example
+plotModel(readSIF('~/R/x86_64-pc-linux-gnu-library/4.1/CellNOptR/DREAMmodel/LiverPKNDREAM.sif'))
