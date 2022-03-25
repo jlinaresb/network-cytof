@@ -18,7 +18,7 @@ estimulations = c('TLR9', 'TLR7')
 # Download protein-protein interactions
 # c('SignaLink3', 'PhosphoSite', 'SIGNOR')
 OmnipathR::get_interaction_resources()
-interactions = import_omnipath_interactions() %>% as_tibble()
+interactions = import_omnipath_interactions(resources = 'SIGNOR') %>% as_tibble()
 
 setdiff(poi, interactions$target_genesymbol)
 setdiff(estimulations, interactions$source_genesymbol)
@@ -126,7 +126,7 @@ df = df[, c(1, 3, 2)]
 # ===
 curation = get.edge.attribute(network)$curation_effort
 df$curation = curation
-df = df[which(df$curation > 2 ),]
+df = df[which(df$curation > 1),]
 
 df = subset(df, select = -c(curation))
 write.table(df,
@@ -145,4 +145,4 @@ plotModel(model)
 
 
 # Complex model example
-plotModel(readSIF('~/R/x86_64-pc-linux-gnu-library/4.1/CellNOptR/DREAMmodel/LiverPKNDREAM.sif'))
+# plotModel(readSIF('~/R/x86_64-pc-linux-gnu-library/4.1/CellNOptR/DREAMmodel/LiverPKNDREAM.sif'))
