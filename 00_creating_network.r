@@ -6,8 +6,8 @@ require(dplyr)
 require(igraph)
 require(ggplot2)
 require(ggraph)
-require(dbparser)
-require(XML)
+# require(dbparser)
+# require(XML)
 
 # Proteins of Interest
 # ===
@@ -38,6 +38,7 @@ OPI_g = interaction_graph(interactions = interactions)
 # ===
 poi = poi[which(poi %in% interactions$target_genesymbol == TRUE)]
 estimulations = estimulations[which(estimulations %in% interactions$source_genesymbol == TRUE)]
+
 
 # Extract paths
 # ===
