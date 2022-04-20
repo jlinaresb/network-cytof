@@ -1,14 +1,3 @@
-# Convert to Gene symbols
-require(AnnotationDbi)
-require(OmnipathR)
-require(org.Hs.eg.db)
-require(dplyr)
-require(igraph)
-require(ggplot2)
-require(ggraph)
-# require(dbparser)
-# require(XML)
-
 # Required packages
 # ===
 require(AnnotationDbi)

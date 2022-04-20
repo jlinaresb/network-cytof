@@ -7,18 +7,14 @@ library(igraph)
 
 # Load data
 # ===
-pknmodel.x = readSIF('~/projects/networks-cytof/networks/network_v3.sif')
-plotModel(pknmodel.x)
-# cnolist.x = CNOlist()
+pknmodel = readSIF('~/projects/networks-cytof/networks/network_v5_modified.sif')
+plotModel(pknmodel)
 
-data("ToyModel", package="CellNOptR")
-data("CNOlistToy", package="CellNOptR")
+cno = readMIDAS('~/projects/networks-cytof/data/MIDAS/GEN2.2.csv')
+cno = makeCNOlist(cno, subfield = F)
 
-pknmodel = ToyModel
-cnolist = CNOlist(CNOlistToy)
-
-checkSignals(CNOlistToy,pknmodel)
-plotModel(model = pknmodel, CNOlist = cnolist)
+checkSignals(cno, pknmodel)
+plotModel(model = pknmodel, CNOlist = cno)
 
 # Preprocessing
 # ===
@@ -34,16 +30,16 @@ plotModel(model = pknmodel, CNOlist = cnolist)
 # Expanding the gates
 # model = expandGates(NCNOcutComp, maxInputsPerGate = 3)
 
-model = preprocessing(CNOlistToy, pknmodel, expansion = T,
+model = preprocessing(cno, pknmodel, expansion = T,
                       compression = T, cutNONC = T, verbose = T)
 
 # Training the model
 # ===
 initBstring = rep(1,length(model$reacID))
-opt = gaBinaryT1(CNOlist = CNOlistToy, model = model,
+opt = gaBinaryTN(CNOlist = CNOlistToy, model = model,
                  initBstring = initBstring, verbose = T)
 
-
+?gaBinaryTN
 # Plot results
 # ===
 cutAndPlot(model=model, bStrings=list(opt$bString),
