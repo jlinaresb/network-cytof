@@ -38,7 +38,7 @@ cell_lines = unique(data$cell_line)
 
 # Normalize (??)
 # ===
-celline_data[, markers] = apply(celline_data[, markers], 2, function(x) log2(x + 1))
+# celline_data[, markers] = apply(celline_data[, markers], 2, function(x) log2(x + 1))
 
 
 # Melt data
