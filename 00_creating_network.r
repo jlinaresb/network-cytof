@@ -1,4 +1,5 @@
-# Convert to Gene symbols
+# Required packages
+# ===
 require(AnnotationDbi)
 require(OmnipathR)
 require(org.Hs.eg.db)
@@ -9,36 +10,29 @@ require(ggraph)
 # require(dbparser)
 # require(XML)
 
-# Proteins of Interest
+annot = read.csv('~/projects/networks-cytof/annotations/annotation_markers.csv', header = F, skip = 1)
+annot = annot[, -1]
+names(annot) = annot[1,]
+annot = annot[-1, ]
+row.names(annot) = 1:nrow(annot)
+head(annot)
+
+# Load interactions
 # ===
-poi = c('STAT1', 'STAT3', 'STAT4', 'RPS6', 'MAPK3',
-        'MAPK1', 'MAPKAPK2', 'AKT1', 'RELA', 'CREB1', 'PTPN11')
-estimulations = c('TLR9', 'TLR7')
-
-# Download protein-protein interactions
-# c('SignaLink3', 'PhosphoSite', 'SIGNOR')
-OmnipathR::get_interaction_resources()
+allinteractions = import_omnipath_interactions() %>% as_tibble()
 interactions = import_omnipath_interactions(resources = 'SIGNOR') %>% as_tibble()
-
-setdiff(poi, interactions$target_genesymbol)
-setdiff(estimulations, interactions$source_genesymbol)
-
-# Convert to igraph objects:
 OPI_g = interaction_graph(interactions = interactions)
-
-# # Get annotations
-# # ===
-# annot = import_omnipath_annotations(proteins = 'STAT1',
-#                                     resources = 'MSigDB') %>%
-#   as_tibble()
-# setdiff(poi, annot$genesymbol)
-# annot = annot[grep('REACTOME', annot$value),]
 
 # Quality control
 # ===
+poi = annot[which(annot$annot == 'measured'), ]$`gene symbol`
+poi = c(poi, 'IRF7')     # add IRF7 to network
+estimulations = annot[which(annot$annot == 'estimulated'), ]$`gene symbol`
+
 poi = poi[which(poi %in% interactions$target_genesymbol == TRUE)]
 estimulations = estimulations[which(estimulations %in% interactions$source_genesymbol == TRUE)]
 
+setdiff(annot$`gene symbol`, poi)
 
 # Extract paths
 # ===
@@ -55,16 +49,10 @@ collected_path_nodes = unlist(collected_path_nodes) %>% unique()
 nodes = c(poi, estimulations, collected_path_nodes) %>% unique()
 
 
-# Import annotation of genes include in the pathway
-# ===
-# annot = import_omnipath_annotations(proteins = nodes,
-#                                     resources = 'SIGNOR') %>% 
-#   as_tibble()
-
-
 # Build network
 # ===
 network = induced_subgraph(graph = OPI_g, vids = nodes)
+
 
 # Annotate network
 # ===
@@ -81,31 +69,31 @@ E(network)$direction = ifelse(
 
 # Plotting
 # ===
-ggraph(
-  network,
-  layout = "lgl",
-  area = vcount(network)^2.3,
-  repulserad = vcount(network)^1.2,
-  coolexp = 1.1
-) +
-  geom_edge_link(
-    aes(
-      start_cap = label_rect(node1.name),
-      end_cap = label_rect(node2.name)),
-    arrow = arrow(length = unit(4, 'mm')
-    ),
-    edge_width = .5,
-    edge_alpha = .2
-  ) +
-  geom_node_point() +
-  geom_node_label(aes(label = name, color = node_type)) +
-  scale_color_discrete(
-    guide = guide_legend(title = 'Node type')
-  ) +
-  theme_bw() +
-  xlab("") +
-  ylab("") +
-  ggtitle("Induced network")
+# ggraph(
+#   network,
+#   layout = "lgl",
+#   area = vcount(network)^2.3,
+#   repulserad = vcount(network)^1.2,
+#   coolexp = 1.1
+# ) +
+#   geom_edge_link(
+#     aes(
+#       start_cap = label_rect(node1.name),
+#       end_cap = label_rect(node2.name)),
+#     arrow = arrow(length = unit(4, 'mm')
+#     ),
+#     edge_width = .5,
+#     edge_alpha = .2
+#   ) +
+#   geom_node_point() +
+#   geom_node_label(aes(label = name, color = node_type)) +
+#   scale_color_discrete(
+#     guide = guide_legend(title = 'Node type')
+#   ) +
+#   theme_bw() +
+#   xlab("") +
+#   ylab("") +
+#   ggtitle("Induced network")
 
 
 # Export to cytoscape
@@ -127,22 +115,71 @@ df = df[, c(1, 3, 2)]
 # ===
 curation = get.edge.attribute(network)$curation_effort
 df$curation = curation
-df = df[which(df$curation > 1),]
+# df = df[which(df$curation > 1),]
+
 
 df = subset(df, select = -c(curation))
+
+
+# Change names to proteins
+# ====
+# In poi's
+v = unique(c(df$source, df$target))
+poi_g = intersect(annot$`gene symbol`, v)
+poi_p = annot[match(intersect(annot$`gene symbol`, v), annot$`gene symbol`),]$marker
+names(poi_p) = poi_g
+
+
+# In intermediates
+intermediate_g = setdiff(v, annot$`gene symbol`)
+complexes_g = intermediate_g[grep('_', intermediate_g)]
+
+intermediate_g = setdiff(intermediate_g, complexes_g)
+intermediate_p = intermediate_g
+names(intermediate_p) = intermediate_g
+
+# In complexes
+if (length(complexes_g > 0)) {
+  cplx = import_omnipath_complexes(resources = 'SIGNOR')
+  complexes_p = cplx[match(complexes_g, cplx$components_genesymbols),]$name
+  names(complexes_p) = complexes_g
+}
+
+v.names = c(poi_p, intermediate_p, complexes_p)
+
+# 
+
+s.names = v.names[match(unique(df$source), names(v.names))]
+t.names = v.names[match(unique(df$target), names(v.names))]
+df$source = factor(df$source, labels = s.names)
+df$target = factor(df$target, labels = t.names)
+
+
+# Add manually some interactions
+# ===
+df = tibble::add_row(df, source = 'TBK1', direction = 1, target = 'IRF5')
+df = tibble::add_row(df, source = 'TLR7', direction = 1, target = 'MYD88')
+
+df = df[order(df$source),]
+
+# Save table to .sif
+# =====
 write.table(df,
             quote = F,
             col.names = F,
             row.names = F,
             sep = '\t',
-            file = '~/projects/networks-cytof/networks/network_v4.sif')
+            file = '~/projects/networks-cytof/networks/network_v5.sif')
 
 
 # Read network with cellNOptR
 # ===
 require(CellNOptR)
-model = readSIF('~/projects/networks-cytof/networks/network_v4.sif')
-plotModel(model)
+model = readSIF('~/projects/networks-cytof/networks/network_v5.sif')
+plotModel(model, 
+          stimuli = c('TLR7', 'TLR9'),
+          signals = poi_p)
+
 
 
 # Complex model example
