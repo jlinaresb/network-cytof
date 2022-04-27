@@ -242,7 +242,12 @@ Opt_results_list=list("averageNw"=averageNw,
                       "rmseAll"=rmseAll,
                       "countInteractions"=countInteractions,
                       "countNws"=dim(Opt$stringsTol)[1],
-                      "Opt"=Opt)   
+                      "OptT1"=Opt,
+                      "OptT2"=OptT2,
+                      "OptT3"=OptT3,
+                      "OptT4"=OptT4,
+                      "OptT5"=OptT5)   
 
 
-saveRDS()
+saveRDS(Opt_results_list,
+        file = '03_run_CellNOptR/data/results.RDS')
