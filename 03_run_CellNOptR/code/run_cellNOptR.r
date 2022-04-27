@@ -118,8 +118,8 @@ cutAndPlot(model=model,
 plotFit(optRes=OptT2)
 
 # plot network
-plotModel(model, midas, bString = list(Opt$bString, OptT2$bString))
-bestNw=Opt$bString
+# plotModel(model, midas, bString = list(Opt$bString, OptT2$bString))
+# bestNw=Opt$bString
 
 
 
