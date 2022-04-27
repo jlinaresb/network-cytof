@@ -7,15 +7,19 @@ require(dplyr)
 require(igraph)
 require(ggplot2)
 require(ggraph)
-# require(dbparser)
-# require(XML)
 
-annot = read.csv('~/projects/networks-cytof/annotations/annotation_markers.csv', header = F, skip = 1)
+
+# Arguments
+# ===
+plotGraph = T
+setwd('~/git/network-cytof/')
+
+
+annot = read.csv('extdata/cytof/annotation_markers.csv', header = F, skip = 1)
 annot = annot[, -1]
 names(annot) = annot[1,]
 annot = annot[-1, ]
 row.names(annot) = 1:nrow(annot)
-head(annot)
 
 # Load interactions
 # ===
@@ -33,6 +37,7 @@ poi = poi[which(poi %in% interactions$target_genesymbol == TRUE)]
 estimulations = estimulations[which(estimulations %in% interactions$source_genesymbol == TRUE)]
 
 setdiff(annot$`gene symbol`, poi)
+
 
 # Extract paths
 # ===
@@ -69,31 +74,33 @@ E(network)$direction = ifelse(
 
 # Plotting
 # ===
-# ggraph(
-#   network,
-#   layout = "lgl",
-#   area = vcount(network)^2.3,
-#   repulserad = vcount(network)^1.2,
-#   coolexp = 1.1
-# ) +
-#   geom_edge_link(
-#     aes(
-#       start_cap = label_rect(node1.name),
-#       end_cap = label_rect(node2.name)),
-#     arrow = arrow(length = unit(4, 'mm')
-#     ),
-#     edge_width = .5,
-#     edge_alpha = .2
-#   ) +
-#   geom_node_point() +
-#   geom_node_label(aes(label = name, color = node_type)) +
-#   scale_color_discrete(
-#     guide = guide_legend(title = 'Node type')
-#   ) +
-#   theme_bw() +
-#   xlab("") +
-#   ylab("") +
-#   ggtitle("Induced network")
+if (plotGraph == T) {
+  ggraph(
+    network,
+    layout = "lgl",
+    area = vcount(network)^2.3,
+    repulserad = vcount(network)^1.2,
+    coolexp = 1.1
+  ) +
+    geom_edge_link(
+      aes(
+        start_cap = label_rect(node1.name),
+        end_cap = label_rect(node2.name)),
+      arrow = arrow(length = unit(4, 'mm')
+      ),
+      edge_width = .5,
+      edge_alpha = .2
+    ) +
+    geom_node_point() +
+    geom_node_label(aes(label = name, color = node_type)) +
+    scale_color_discrete(
+      guide = guide_legend(title = 'Node type')
+    ) +
+    theme_bw() +
+    xlab("") +
+    ylab("") +
+    ggtitle("Induced network")
+}
 
 
 # Export to cytoscape
@@ -116,8 +123,6 @@ df = df[, c(1, 3, 2)]
 curation = get.edge.attribute(network)$curation_effort
 df$curation = curation
 # df = df[which(df$curation > 1),]
-
-
 df = subset(df, select = -c(curation))
 
 
@@ -148,7 +153,6 @@ if (length(complexes_g > 0)) {
 v.names = c(poi_p, intermediate_p, complexes_p)
 
 # 
-
 s.names = v.names[match(unique(df$source), names(v.names))]
 t.names = v.names[match(unique(df$target), names(v.names))]
 df$source = factor(df$source, labels = s.names)
@@ -159,7 +163,6 @@ df$target = factor(df$target, labels = t.names)
 # ===
 df = tibble::add_row(df, source = 'TBK1', direction = 1, target = 'IRF5')
 df = tibble::add_row(df, source = 'TLR7', direction = 1, target = 'MYD88')
-
 df = df[order(df$source),]
 
 # Save table to .sif
@@ -169,18 +172,13 @@ write.table(df,
             col.names = F,
             row.names = F,
             sep = '\t',
-            file = '~/projects/networks-cytof/networks/network_v5.sif')
+            file = '01_create_network/data/network.sif')
 
 
 # Read network with cellNOptR
 # ===
-require(CellNOptR)
-model = readSIF('~/projects/networks-cytof/networks/network_v5.sif')
-plotModel(model, 
-          stimuli = c('TLR7', 'TLR9'),
-          signals = poi_p)
-
-
-
-# Complex model example
-# plotModel(readSIF('~/R/x86_64-pc-linux-gnu-library/4.1/CellNOptR/DREAMmodel/LiverPKNDREAM.sif'))
+# require(CellNOptR)
+# model = readSIF('01_create_network/data/network.sif')
+# plotModel(model, 
+#           stimuli = c('TLR7', 'TLR9'),
+#           signals = poi_p)

@@ -10,10 +10,11 @@ library(CellNOptR)
 # Arguments
 # ===
 plotting = F
+setwd('~/git/network-cytof/')
 
 # Load data
 # ===
-inputPath = '~/projects/networks-cytof/data/cytof/Medianas_formato red_10-03-22_CyTOF1.xlsx'
+inputPath = 'extdata/cytof/Medianas_formato red_10-03-22_CyTOF1.xlsx'
 data = readxl::read_excel(inputPath,
                           col_names = T,
                           skip = 1)
@@ -131,7 +132,7 @@ cno$valueSignals$`0` = as.matrix(rbind(control_Signal[,3:12], control_Signal[,3:
 
 # Save MIDAS file
 # ===
-outDir = '~/projects/networks-cytof/data/MIDAS/'
+outDir = '02_preprocess_cytoff/data/'
 setwd(outDir)
 file = paste0(cell_lines, '.csv')
 cnolist = CNOlist(cno)

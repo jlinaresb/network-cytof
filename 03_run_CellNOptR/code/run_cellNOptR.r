@@ -6,7 +6,10 @@ library(NMF)
 
 # Arguments
 # ===
+setwd('~/git/network-cytof/')
 example = 'ours' #ours saez toy
+expand = T
+maxGens = 10000
 
 # Load model and midas
 # ===
@@ -14,8 +17,8 @@ if (example == 'saez') {
   midas=CNOlist('~/git/combiMS/data/phosphos_processed/CH003.csv')
   model=readSIF('~/git/combiMS/files/model/combiMS_PKN_No_Duplication_Activation_sign_PREPROCESSED.sif')
 } else if (example == 'ours') {
-  midas=CNOlist('~/projects/networks-cytof/data/MIDAS/GEN2.2_norm.csv')
-  pknmodel=readSIF('~/projects/networks-cytof/networks/network_v5.sif')
+  midas=CNOlist('02_preprocess_cytoff/data/GEN2.2_norm.csv')
+  pknmodel=readSIF('01_create_network/data/network.sif')
 } else if (example == 'toy'){
   data(CNOlistToy2,package="CellNOptR")
   data(ToyModel2,package="CellNOptR")
@@ -30,9 +33,6 @@ if (example == 'ours') {
   indices = indexFinder(midas, pknmodel, verbose = T)
   model = compressModel(pknmodel, indices)
 }
-# model = preprocessing(midas, model, 
-#                       expansion = T, compression = T, cutNONC = T, 
-#                       verbose = T)
 
 
 # Plot Model
@@ -40,9 +40,20 @@ if (example == 'ours') {
 numInteractions=length(model$reacID)
 sprintf("*********After compressing without expanding logic gates, the model has %s nodes and %s reactions",
         length(model$namesSpecies),numInteractions)
+
 plotModel(model,
           midas,
           graphvizParams=list(fontsize=35,nodeWidth=1,nodeHeight=1))
+
+# Option to expand model
+if (expand == T) {
+  model = preprocessing(midas, model,
+                        expansion = T, compression = F, cutNONC = F,
+                        verbose = T)
+  plotModel(model,
+            midas,
+            graphvizParams=list(fontsize=35,nodeWidth=1,nodeHeight=1))
+}
 
 
 # Cunt and plot model
@@ -60,8 +71,8 @@ Opt = gaBinaryT1(CNOlist=midas,
                  initBstring=initBstring,
                  stallGenMax=600,
                  maxTime=10*60, 
-                 maxGens=10,
-                 verbose=FALSE,
+                 maxGens=maxGens,
+                 verbose=T,
                  popSize=100,
                  elitism=2)     
 
@@ -76,7 +87,7 @@ prova = cutAndPlot(model=model,
 plotFit(optRes=Opt)
 
 # plot network
-plotModel(model,midas,Opt$bString)
+plotModel(model, midas, Opt$bString)
 bestNw=Opt$bString
 
 # compare with PKN
@@ -84,14 +95,17 @@ bs = mapBack(model, pknmodel, Opt$bString)
 plotModel(pknmodel, midas, bs, compressed = model$speciesCompressed)
 
 
-
-
 # Second time point (at 20 mins)
 # ===
 OptT2 = gaBinaryTN(CNOlist=midas,
                    model=model,
                    bStrings= list(Opt$bString),
-                   verbose=TRUE)
+                   stallGenMax=600,
+                   maxTime=10*60, 
+                   maxGens=maxGens,
+                   verbose=T,
+                   popSize=100,
+                   elitism=2)
 
 #plot fits
 cutAndPlot(model=model,
@@ -103,13 +117,23 @@ cutAndPlot(model=model,
 # plot objective function
 plotFit(optRes=OptT2)
 
+# plot network
+plotModel(model, midas, bString = list(Opt$bString, OptT2$bString))
+bestNw=Opt$bString
+
+
 
 # Third time point (at 30 mins)
 # ===
 OptT3 = gaBinaryTN(CNOlist=midas,
                    model=model,
                    bStrings= list(Opt$bString, OptT2$bString),
-                   verbose=TRUE,
+                   stallGenMax=600,
+                   maxTime=10*60, 
+                   maxGens=maxGens,
+                   verbose=T,
+                   popSize=100,
+                   elitism=2,
                    timeIndex = 3)
 
 #plot fits
@@ -128,7 +152,12 @@ plotFit(optRes=OptT3)
 OptT4 = gaBinaryTN(CNOlist=midas,
                    model=model,
                    bStrings= list(Opt$bString, OptT2$bString, OptT3$bString),
-                   verbose=TRUE,
+                   stallGenMax=600,
+                   maxTime=10*60, 
+                   maxGens=maxGens,
+                   verbose=T,
+                   popSize=100,
+                   elitism=2,
                    timeIndex = 4)
 
 #plot fits
@@ -149,7 +178,12 @@ OptT5 = gaBinaryTN(CNOlist=midas,
                    model=model,
                    bStrings= list(Opt$bString, OptT2$bString,
                                   OptT3$bString, OptT4$bString),
-                   verbose=TRUE,
+                   stallGenMax=600,
+                   maxTime=10*60, 
+                   maxGens=maxGens,
+                   verbose=T,
+                   popSize=100,
+                   elitism=2,
                    timeIndex = 5)
 
 #plot fits
@@ -178,24 +212,12 @@ plotModel(model,
 
 
 
-
-
-
-
-
-# HASTA AQUÍ!!!!!
-
-
-
-
-
-
 #   
-# *************************** calculate average times an interaction survives in the all networks within relTol
-#there is a best network expressed as interaction vector and there is the same for all networks within a relTol 
-sprintf("*********the number of networks within relTols is %s",dim(Opt$stringsTol)[1])
+# calculate average times an interaction survives in the all networks within relTol
+# there is a best network expressed as interaction vector and there is the same for all networks within a relTol 
+sprintf("*********the number of networks within relTols is %s", dim(Opt$stringsTol)[1])
 numEdges=dim(Opt$stringsTol)[2]           
-cat(sprintf("*******the number of edges in each network is %s",numEdges),sep="\n")    
+cat(sprintf("*******the number of edges in each network is %s", numEdges),sep="\n")    
 
 
 countInteractions=numeric(length=dim(Opt$stringsTol)[2])
@@ -221,3 +243,6 @@ Opt_results_list=list("averageNw"=averageNw,
                       "countInteractions"=countInteractions,
                       "countNws"=dim(Opt$stringsTol)[1],
                       "Opt"=Opt)   
+
+
+saveRDS()

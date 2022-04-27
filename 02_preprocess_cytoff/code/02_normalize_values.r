@@ -4,37 +4,37 @@ library(reshape2)
 # PROCESSING
 # ===
 HillCoef = 2
-taula = read.csv('~/projects/networks-cytof/data/MIDAS/GEN2.2.csv')
+setwd('~/git/network-cytof/')
+
+taula = read.csv('02_preprocess_cytoff/data/GEN2.2.csv')
 taula = taula[-c(2:4, 7, 10, 13, 16),]  # remove repeated control conditions
 
-
-
-#************* create a subset of the matrix containing only the DV values
+# Create a subset of the matrix containing only the DV values
 taula2=taula[,grep('DV',colnames(taula))]
 # rename columns for improved plotting by removing "DV"
 for (i in 1:length(names(taula2))){
   colnames(taula2)[i]=strsplit(names(taula2[i]),".", fixed = T)[[1]][2]                     
 }
 
-#************* step1: X= log2 (rawx)
+# Normalize data
 taula2=log2(taula2)
 
-#************* step2: compute Fold Change, since we have log2 we just substract
+# Calcule logFC
 row1=taula2[1,]
 for (i in 1:dim(taula2)[1]){
   taula2[i,] = taula2[i,] - row1
 }
 
-#************* plot log-FC distribution
+# Plot log-FC distribution
 meltPatient=melt(taula2)
 names(meltPatient)=c('protein','logFC')
 
 ggplot(meltPatient, aes(logFC, colour=protein)) + 
   geom_density() +
-  #geom_bar(position='dodge') +
-  # facet_grid(protein~., scales='free') +
   geom_vline(xintercept=0, colour='grey') +
-  theme_bw()+ggtitle("patient IB015, 21 experiments x protein")
+  theme_bw() + 
+  ggtitle("logFC distribution")
+
 
 # ************ for each protein, find out which distribuitions are skewed, and to which side
 # calculate t-test and keep pvalue. for each protein, a patient has a distribution
@@ -53,10 +53,6 @@ for (i in 1:numProt){
 }
 negativeProt=which(pvalueLess<0.05)
 # proteins that fail both tests are not significantly pos or neg phosphorylated
-
-
-
-
 noiseProt=intersect(which(pvalueGreater>=0.05),which(pvalueLess>=0.05))    
 
 
@@ -66,8 +62,6 @@ nameProts=names(taula2)[noiseProt]
 subsetNoise=meltPatient[which(meltPatient$protein %in% nameProts),]
 ggplot(subsetNoise, aes(logFC, colour=protein)) + 
   geom_density() +
-  #geom_bar(position='dodge') +
-  # facet_grid(protein~., scales='free') +
   geom_vline(xintercept=0, colour='grey') +
   theme_bw()+ggtitle("patient IB015, unphosphorylated proteins")
 # plot proteins that are negatively significantly phosphorylated
@@ -75,21 +69,17 @@ nameProts=names(taula2)[negativeProt]
 subsetNegative=meltPatient[which(meltPatient$protein %in% nameProts),]
 ggplot(subsetNegative, aes(logFC, colour=protein)) + 
   geom_density() +
-  #geom_bar(position='dodge') +
-  # facet_grid(protein~., scales='free') +
   geom_vline(xintercept=0, colour='grey') +
-  theme_bw()+ggtitle("patient IB015, negatively phosphorylated proteins")
+  theme_bw()+ggtitle("Negatively phosphorylated proteins")
 # plot proteins that are positively significantly phosphorylated
 nameProts=names(taula2)[positiveProt]
 subsetPositive=meltPatient[which(meltPatient$protein %in% nameProts),]
 ggplot(subsetPositive, aes(logFC, colour=protein)) + 
   geom_density() +
-  #geom_bar(position='dodge') +
-  # facet_grid(protein~., scales='free') +
   geom_vline(xintercept=0, colour='grey') +
-  theme_bw()+ggtitle("patient IB015, positively phosphorylated proteins")
+  theme_bw()+ggtitle("Positively phosphorylated proteins")
 
-#************** step3: correct pos and neg distributions (non-significant still need to be corrected)
+# Step3: correct pos and neg distributions (non-significant still need to be corrected)
 # in positive distributions: leave positives unchanged. between 0 and -1, replace by 0. below -1 replace by NA
 numExp=dim(taula2)[1]
 if (length(positiveProt)>0){
@@ -154,11 +144,6 @@ taula3[,indexAllButNoise]=apply(taula2[,indexAllButNoise], 2, function(column){
   1 / (1 + (median(column,na.rm=TRUE) / column) ^ HillCoef)
 })
 
-#EC50 <- colMedians(as.matri(taula2))
-#taula2 = 1 / (1 + (EC50 / taula2)^HillCoef)
-
-
-
 
 #   #************* step6: shift negatives
 if (length(negativeProt)>0){
@@ -168,7 +153,6 @@ if (length(negativeProt)>0){
 }
 
 #************* plot normalised distributions
-
 normalizedPatient=melt(data.frame(taula3))
 names(normalizedPatient)=c('protein','logFC')
 
@@ -223,4 +207,4 @@ colnames(taula)[which(colnames(taula) == 'DV:pERK1:2')] = 'DV:pERK1/2'
 colnames(taula)[which(colnames(taula) == 'DA:pNF:kB_p65')] = 'DA:pNF-kB_p65'
 colnames(taula)[which(colnames(taula) == 'DV:pNF:kB_p65')] = 'DV:pNF-kB_p65'
 
-write.csv(taula, file = '~/projects/networks-cytof/data/MIDAS/GEN2.2_norm.csv')
+write.csv(taula, file = '02_preprocess_cytoff/data/GEN2.2_norm.csv')
