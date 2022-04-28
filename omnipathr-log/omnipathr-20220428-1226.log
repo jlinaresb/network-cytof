@@ -1,0 +1,11 @@
+[2022-04-28 12:26:29] [INFO]    [OmnipathR] Initialized cache: `/home/joselinares/.cache/OmnipathR`.
+[2022-04-28 12:26:29] [INFO]    [OmnipathR] Welcome to OmnipathR!
+[2022-04-28 12:26:30] [TRACE]   [OmnipathR] Loaded data from RDS `/home/joselinares/.cache/OmnipathR/a7b21d9d80a3837a50268df16d168128fc1c6ede-1.rds`.
+[2022-04-28 12:26:30] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=omnipath&organisms=9606&fields=sources,references,curation_effort&license=academic`
+[2022-04-28 12:26:30] [SUCCESS] [OmnipathR] Loaded 40014 interactions from cache.
+[2022-04-28 12:26:31] [TRACE]   [OmnipathR] Loaded data from RDS `/home/joselinares/.cache/OmnipathR/74bd66f69968c987c91355d0d194bd318f15ef74-1.rds`.
+[2022-04-28 12:26:31] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=SIGNOR&datasets=omnipath&organisms=9606&fields=sources,references,curation_effort&license=academic`
+[2022-04-28 12:26:31] [SUCCESS] [OmnipathR] Loaded 11816 interactions from cache.
+[2022-04-28 12:27:52] [TRACE]   [OmnipathR] Loaded data from RDS `/home/joselinares/.cache/OmnipathR/d5e8cb4fcfd10871ef59abf3b391b0943d968447-1.rds`.
+[2022-04-28 12:27:52] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/complexes?resources=SIGNOR&license=academic`
+[2022-04-28 12:27:52] [SUCCESS] [OmnipathR] Loaded 3195 protein complexes from cache.

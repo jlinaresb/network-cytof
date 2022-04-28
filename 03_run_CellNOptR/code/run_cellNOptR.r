@@ -9,7 +9,7 @@ library(NMF)
 setwd('~/git/network-cytof/')
 example = 'ours' #ours saez toy
 expand = T
-maxGens = 10000
+maxGens = 100
 
 # Load model and midas
 # ===
@@ -58,7 +58,7 @@ if (expand == T) {
 
 # Cunt and plot model
 # ===
-initBstring=rep(1,length(model$reacID))
+initBstring = sample(0:1, length(model$reacID), replace = T)
 cutAndPlot(midas,
            model,
            list(initBstring)) #simulate
@@ -77,11 +77,11 @@ Opt = gaBinaryT1(CNOlist=midas,
                  elitism=2)     
 
 # plot fits
-prova = cutAndPlot(model=model,
-                   bStrings=list(Opt$bString),
-                   CNOlist=midas, 
-                   plotPDF=FALSE, 
-                   plotParams = list(maxrow = 25,cex=.8))
+cutAndPlot(model=model,
+           bStrings=list(Opt$bString),
+           CNOlist=midas, 
+           plotPDF=FALSE, 
+           plotParams = list(maxrow = 25,cex=.8))
 
 # plot objective function
 plotFit(optRes=Opt)
