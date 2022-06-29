@@ -15,6 +15,7 @@ model = compressModel(pknmodel, indices)
 #                       expansion = T, compression = F, cutNONC = F,
 #                       verbose = T)
 
+setwd('~/git/network-cytof/04_cytoscape/data/')
 writeScaffold(
   modelComprExpanded = model,
   optimResT1 = res$OptT1,
