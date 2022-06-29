@@ -2,3 +2,5 @@ parse_drugBank.r
 utils.r
 *.EA
 *.pdf
+*.sif
+*.dot
