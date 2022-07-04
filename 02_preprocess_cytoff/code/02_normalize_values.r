@@ -6,7 +6,9 @@ library(reshape2)
 HillCoef = 2
 setwd('~/git/network-cytof/')
 
-taula = read.csv('02_preprocess_cytoff/data/GEN2.2.csv')
+cell.line = 'GEN2.2'    #SIDT1 GEN2.2
+
+taula = read.csv(paste0('02_preprocess_cytoff/data/', cell.line, '.csv'))
 taula = taula[-c(2:4, 7, 10, 13, 16),]  # remove repeated control conditions
 
 # Create a subset of the matrix containing only the DV values
@@ -207,4 +209,4 @@ colnames(taula)[which(colnames(taula) == 'DV:pERK1:2')] = 'DV:pERK1/2'
 colnames(taula)[which(colnames(taula) == 'DA:pNF:kB_p65')] = 'DA:pNF-kB_p65'
 colnames(taula)[which(colnames(taula) == 'DV:pNF:kB_p65')] = 'DV:pNF-kB_p65'
 
-write.csv(taula, file = '02_preprocess_cytoff/data/GEN2.2_norm.csv')
+write.csv(taula, file = paste0('02_preprocess_cytoff/data/', cell.line, '_norm.csv'))

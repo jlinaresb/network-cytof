@@ -14,15 +14,16 @@ setwd('~/git/network-cytof/')
 
 # Load data
 # ===
-inputPath = 'extdata/cytof/Medianas_formato red_10-03-22_CyTOF1.xlsx'
+inputPath = 'extdata/cytof/DATOS medianas nuevos SIDT1.xlsx'
 data = readxl::read_excel(inputPath,
                           col_names = T,
                           skip = 1)
 
 
-# Remove pTyrosine (not included in the network)
+# Remove pTyrosine and p38 (not included in the network)
 # ===
 data = data[, - grep('pTyrosi', names(data))]
+data = data[, - grep('p38', names(data))]
 
 # Change values names
 # ===
@@ -102,11 +103,11 @@ valueSignals = vector('list', length = length(timepoints))
 names(valueSignals) = timepoints
 
 # control 
-cno_data_t = filter(cno_data, time==0)
+cno_data_t = dplyr::filter(cno_data, time==0)
 control_Signal = dcast(cno_data_t, 
                    time ~ markers, 
-                   value.var = "signal",
-                   fill = NA)
+                   mean,
+                   value.var = "signal")
 control_Signal = tibble::add_column(control_Signal, stimulation = 'medium', .after = 1)
 
 # timepoints
@@ -114,7 +115,7 @@ cno_data_no_ctrls = cno_data[-which(cno_data$time == 0), ]
 for(time_ind in 2:length(timepoints)){
   
   act_time = timepoints[[time_ind]]
-  cno_data_filter = filter(cno_data_no_ctrls, time==act_time)
+  cno_data_filter = dplyr::filter(cno_data_no_ctrls, time==act_time)
   formated_S = reshape2::dcast(cno_data_filter, 
                      time + stimulation ~ markers, 
                      value.var = "signal",
