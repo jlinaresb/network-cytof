@@ -4,5 +4,3 @@ utils.r
 *.pdf
 *.sif
 *.dot
-extdata/cytof/*.xlsx
-extdata/cytof/*.csv
