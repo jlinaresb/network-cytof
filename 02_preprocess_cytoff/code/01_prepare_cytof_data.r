@@ -14,7 +14,7 @@ setwd('~/git/network-cytof/')
 
 # Load data
 # ===
-inputPath = 'extdata/cytof/DATOS medianas nuevos SIDT1.xlsx'
+inputPath = 'extdata/cytof/DATOS medianas nuevos GEN2.2.xlsx'
 data = readxl::read_excel(inputPath,
                           col_names = T,
                           skip = 1)
@@ -23,7 +23,7 @@ data = readxl::read_excel(inputPath,
 # Remove pTyrosine and p38 (not included in the network)
 # ===
 data = data[, - grep('pTyrosi', names(data))]
-data = data[, - grep('p38', names(data))]
+# data = data[, - grep('p38', names(data))]
 
 # Change values names
 # ===
@@ -127,7 +127,7 @@ for(time_ind in 2:length(timepoints)){
   valueSignals[[time_ind]] = as.matrix(formated_S[,markers])
 }
 cno$valueSignals = valueSignals
-cno$valueSignals$`0` = as.matrix(rbind(control_Signal[,3:12], control_Signal[,3:12], control_Signal[,3:12]))
+cno$valueSignals$`0` = as.matrix(rbind(control_Signal[,3:13], control_Signal[,3:13], control_Signal[,3:13]))
 
 
 

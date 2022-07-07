@@ -6,7 +6,7 @@ library(reshape2)
 HillCoef = 2
 setwd('~/git/network-cytof/')
 
-cell.line = 'GEN2.2'    #SIDT1 GEN2.2
+cell.line = 'SIDT1'    #SIDT1 GEN2.2
 
 taula = read.csv(paste0('02_preprocess_cytoff/data/', cell.line, '.csv'))
 taula = taula[-c(2:4, 7, 10, 13, 16),]  # remove repeated control conditions

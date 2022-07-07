@@ -14,12 +14,9 @@ require(ggraph)
 plotGraph = T
 setwd('~/git/network-cytof/')
 
-
-annot = read.csv('extdata/cytof/annotation_markers.csv', header = F, skip = 1)
-annot = annot[, -1]
-names(annot) = annot[1,]
-annot = annot[-1, ]
-row.names(annot) = 1:nrow(annot)
+# Load annoation
+# ===
+annot = readRDS('extdata/cytof/annotation_markers.rds')
 
 # Load interactions
 # ===
@@ -29,9 +26,9 @@ OPI_g = interaction_graph(interactions = interactions)
 
 # Quality control
 # ===
-poi = annot[which(annot$annot == 'measured'), ]$`gene symbol`
-poi = c(poi, 'IRF7')     # add IRF7 to network
-estimulations = annot[which(annot$annot == 'estimulated'), ]$`gene symbol`
+poi = annot[which(annot$annot == 'measured'), ]$gene.symbol
+# poi = c(poi, 'IRF7')     # add IRF7 to network
+estimulations = annot[which(annot$annot == 'estimulated'), ]$gene.symbol
 
 poi = poi[which(poi %in% interactions$target_genesymbol == TRUE)]
 estimulations = estimulations[which(estimulations %in% interactions$source_genesymbol == TRUE)]
@@ -130,13 +127,13 @@ df = subset(df, select = -c(curation))
 # ====
 # In poi's
 v = unique(c(df$source, df$target))
-poi_g = intersect(annot$`gene symbol`, v)
-poi_p = annot[match(intersect(annot$`gene symbol`, v), annot$`gene symbol`),]$marker
+poi_g = intersect(annot$gene.symbol, v)
+poi_p = annot[match(intersect(annot$gene.symbol, v), annot$gene.symbol),]$marker
 names(poi_p) = poi_g
 
 
 # In intermediates
-intermediate_g = setdiff(v, annot$`gene symbol`)
+intermediate_g = setdiff(v, annot$gene.symbol)
 complexes_g = intermediate_g[grep('_', intermediate_g)]
 
 intermediate_g = setdiff(intermediate_g, complexes_g)
@@ -172,13 +169,13 @@ write.table(df,
             col.names = F,
             row.names = F,
             sep = '\t',
-            file = '01_create_network/data/network.sif')
+            file = '01_create_network/data/network2.sif')
 
 
 # Read network with cellNOptR
 # ===
-# require(CellNOptR)
-# model = readSIF('01_create_network/data/network.sif')
-# plotModel(model, 
-#           stimuli = c('TLR7', 'TLR9'),
-#           signals = poi_p)
+require(CellNOptR)
+model = readSIF('01_create_network/data/network2.sif')
+plotModel(model,
+          stimuli = c('TLR7', 'TLR9'),
+          signals = poi_p)

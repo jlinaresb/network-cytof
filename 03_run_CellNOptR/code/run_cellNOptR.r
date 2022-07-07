@@ -8,7 +8,7 @@ library(NMF)
 # ===
 setwd('~/git/network-cytof/')
 example = 'ours' #ours saez toy
-cell.line = 'SIDT1'    #SIDT1 GEN2.2
+cell.line = 'GEN2.2'    #SIDT1 GEN2.2
 expand = T
 maxGens = 100
 
@@ -19,7 +19,7 @@ if (example == 'saez') {
   model=readSIF('~/git/combiMS/files/model/combiMS_PKN_No_Duplication_Activation_sign_PREPROCESSED.sif')
 } else if (example == 'ours') {
   midas=CNOlist(paste0('02_preprocess_cytoff/data/', cell.line, '_norm.csv'))
-  pknmodel=readSIF('01_create_network/data/network.sif')
+  pknmodel=readSIF('01_create_network/data/network2.sif')
 } else if (example == 'toy'){
   data(CNOlistToy2,package="CellNOptR")
   data(ToyModel2,package="CellNOptR")
@@ -59,10 +59,11 @@ if (expand == T) {
 
 # Cunt and plot model
 # ===
-initBstring = sample(0:1, length(model$reacID), replace = T)
+initBstring = sample(1, length(model$reacID), replace = T)
 cutAndPlot(midas,
            model,
-           list(initBstring)) #simulate
+           list(initBstring),
+           plotParams=list(maxrow=25, margin=0.1, width=20, height=20)) #simulate
 
 
 # First time point (at 10 mins)
@@ -82,7 +83,7 @@ cutAndPlot(model=model,
            bStrings=list(Opt$bString),
            CNOlist=midas, 
            plotPDF=FALSE, 
-           plotParams = list(maxrow = 25,cex=.8))
+           plotParams=list(maxrow=25, margin=0.1, width=40, height=20, cex = .5))
 
 # plot objective function
 plotFit(optRes=Opt)
@@ -113,7 +114,7 @@ cutAndPlot(model=model,
            bStrings=list(Opt$bString, OptT2$bString),
            CNOlist=midas, 
            plotPDF=F,
-           plotParams = list(maxrow = 25,cex=.8))
+           plotParams=list(maxrow=25, margin=0.1, width=40, height=20, cex = .5))
 
 # plot objective function
 plotFit(optRes=OptT2)
@@ -138,83 +139,39 @@ OptT3 = gaBinaryTN(CNOlist=midas,
                    timeIndex = 3)
 
 #plot fits
-prova = cutAndPlot(model=model,
+cutAndPlot(model=model,
            bStrings=list(Opt$bString, OptT2$bString, OptT3$bString),
            CNOlist=midas, 
            plotPDF=F,
-           plotParams = list(maxrow = 25,cex=.8))
+           plotParams=list(maxrow=25, margin=0.1, width=20, height=20))
 
 # plot objective function
 plotFit(optRes=OptT3)
 
+# compare with PKN
 
-# 4th time point (at 45 min)
-# ===
-# OptT4 = gaBinaryTN(CNOlist=midas,
-#                    model=model,
-#                    bStrings= list(Opt$bString, OptT2$bString, OptT3$bString),
-#                    stallGenMax=600,
-#                    maxTime=10*60, 
-#                    maxGens=maxGens,
-#                    verbose=T,
-#                    popSize=100,
-#                    elitism=2,
-#                    timeIndex = 4)
-# 
-# #plot fits
-# cutAndPlot(model=model,
-#            bStrings=list(Opt$bString, OptT2$bString,
-#                          OptT3$bString, OptT4$bString),
-#            CNOlist=midas, 
-#            plotPDF=F,
-#            plotParams = list(maxrow = 25,cex=.8))
-# 
-# # plot objective function
-# plotFit(optRes=OptT4)
+# PKN model
+plotModel(pknmodel, midas)
+# At time 1 (10)
+bs1 = mapBack(model, pknmodel, Opt$bString)
+plotModel(pknmodel, midas, bs1, compressed = model$speciesCompressed)
+# At time 2 (60)
+bs2 = mapBack(model, pknmodel, OptT2$bString)
+plotModel(pknmodel, midas, bs2, compressed = model$speciesCompressed)
+# At time 3 (120)
+bs3 = mapBack(model, pknmodel, OptT3$bString)
+plotModel(pknmodel, midas, bs3, compressed = model$speciesCompressed)
 
 
-# 5th time point (at 60 min)
-# ===
-# OptT5 = gaBinaryTN(CNOlist=midas,
-#                    model=model,
-#                    bStrings= list(Opt$bString, OptT2$bString,
-#                                   OptT3$bString, OptT4$bString),
-#                    stallGenMax=600,
-#                    maxTime=10*60, 
-#                    maxGens=maxGens,
-#                    verbose=T,
-#                    popSize=100,
-#                    elitism=2,
-#                    timeIndex = 5)
-# 
-# #plot fits
-# cutAndPlot(model=model,
-#            bStrings=list(Opt$bString, OptT2$bString,
-#                          OptT3$bString, OptT4$bString,
-#                          OptT5$bString),
-#            CNOlist=midas, 
-#            plotPDF=F,
-#            plotParams = list(maxrow = 25,cex=.8))
 
-# plot objective function
-# plotFit(optRes=OptT5)
-
-
-# Final model
-# ===
-#plot network
 # interactionsTN = buildBitString(list(Opt$bString,OptT2$bString,
-#                                      OptT3$bString,OptT4$bString,
-#                                      OptT5$bString))
-
-interactionsTN = buildBitString(list(Opt$bString,OptT2$bString,
-                                     OptT3$bString))
-
-
-plotModel(model,
-          midas,
-          bString=interactionsTN$bs,
-          indexIntegr=interactionsTN$bsTimes)
+#                                      OptT3$bString))
+# 
+# 
+# plotModel(model,
+#           midas,
+#           bString=interactionsTN$bs,
+#           indexIntegr=interactionsTN$bsTimes)
 
 
 
